@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+artifacts/
+report.html
+playwright-report/
+.allure/
+.mypy_cache/
+.ruff_cache/
+.idea/
+.vscode/
+.dist/
+node_modules/

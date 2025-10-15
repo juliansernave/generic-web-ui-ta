@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "generic-web-ui-ta"
+version = "0.1.0"
+description = "Generic Web UI Test Automation – Sauce Demo with Playwright, Pytest, Allure"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# Test stack
+pytest = "^8.3"
+playwright = ">=1.43,<2"              # Playwright engine
+pytest-playwright = ">=0.5.0"            # Pytest plugin/fixtures
+allure-pytest = ">=2.13.5"              # Allure integration
+python-dotenv = "^1.0.1"                # .env management
+faker = "^29.0.0"                       # Test data builders
+loguru = "^0.7.2"                        # Nice logging
+pydantic = "^2.12.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"                         # Lint
+black = "^24.8.0"                       # Format
+pre-commit = "^3.8.0"
+pytest-xdist = "^3.8.0"
+
+[tool.pytest.ini_options]
+addopts = "-q --alluredir=allure-results"
+# Register markers used in the suite (helps with CI filters & docs)
+markers = [
+  "smoke: high-value, fast checks",
+  "ui: UI tests",
+  "regression: broader coverage",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/F: flake8 base, I: isort, B: flake8-bugbear
+select = ["E", "F", "I", "B"]
+ignore = []
+
+[tool.black]
+line-length = 100
+
+[build-system]
+requires = ["poetry-core>=1.2.0"]
+build-backend = "poetry.core.masonry.api"
