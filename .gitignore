@@ -12,3 +12,6 @@ playwright-report/
 .vscode/
 .dist/
 node_modules/
+allure-results/
+allure-report/
+artifacts/
