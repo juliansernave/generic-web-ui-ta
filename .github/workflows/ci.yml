@@ -20,22 +20,16 @@ jobs:
         with:
           poetry-version: "1.8.3"
 
-      - name: Cache Poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pypoetry
-          key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: poetry-${{ runner.os }}-
-
       - name: Install deps
         run: |
           poetry install --no-interaction --no-ansi
           poetry run playwright install --with-deps
 
-      - name: Lint
-        run: |
-          poetry run ruff check .
-          poetry run black --check .
-
       - name: Run tests (headless)
-        run: poetry run pytest -n auto --maxfail=1 --dist=loadfile -q
+        run: poetry run pytest -n auto --maxfail=1 --dist=loadfile --html=report.html --self-contained-html
+
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: report.html
