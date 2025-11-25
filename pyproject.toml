@@ -38,8 +38,13 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C90"]
 ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "config", "core", "pages", "services"]
 
 [tool.black]
 line-length = 100
