@@ -535,4 +535,402 @@ Current test coverage includes:
 
 ---
 
+# Allure Reporting Guide 📊
+
+Esta guía explica cómo usar Allure para generar reportes detallados de tus tests.
+
+## 🎯 ¿Qué es Allure?
+
+Allure es un framework de reporting flexible y ligero que muestra una representación clara de lo que se ha probado de manera concisa. Permite a todos los miembros del equipo (stakeholders, desarrolladores, QA) extraer la máxima información del proceso de testing diario.
+
+## 📦 Instalación de Allure Commandline
+
+### macOS
+```bash
+brew install allure
+```
+
+### Windows
+```bash
+scoop install allure
+```
+
+### Linux
+```bash
+# Descargar la última versión
+wget https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
+
+# Extraer
+tar -zxvf allure-2.25.0.tgz
+
+# Agregar al PATH
+export PATH=$PATH:/path/to/allure-2.25.0/bin
+```
+
+Verifica la instalación:
+```bash
+allure --version
+```
+
+## 🚀 Uso Rápido
+
+### Opción 1: Generar y servir reporte en un comando
+```bash
+make allure-serve
+```
+
+Este comando:
+1. Ejecuta todos los tests
+2. Genera resultados en `allure-results/`
+3. Abre automáticamente el reporte en tu navegador
+
+### Opción 2: Generar reporte HTML estático
+```bash
+make allure-report
+```
+
+Luego abre `allure-report/index.html` en tu navegador.
+
+### Opción 3: Comandos individuales
+```bash
+# 1. Ejecutar tests y generar resultados
+poetry run pytest --alluredir=allure-results
+
+# 2. Generar reporte HTML
+allure generate allure-results --clean -o allure-report
+
+# 3. Abrir reporte
+allure open allure-report
+```
+
+## 📝 Decoradores de Allure
+
+### Organización de Tests
+
+```python
+import allure
+
+@allure.epic("E-Commerce Platform")        # Nivel más alto - módulo completo
+@allure.feature("Shopping Cart")           # Feature específica
+@allure.story("Add to Cart")               # User story
+@allure.title("User can add items to cart")
+def test_add_to_cart():
+    pass
+```
+
+### Severidad
+
+```python
+@allure.severity(allure.severity_level.BLOCKER)    # Bloquea todo el sistema
+@allure.severity(allure.severity_level.CRITICAL)   # Funcionalidad crítica
+@allure.severity(allure.severity_level.NORMAL)     # Funcionalidad normal
+@allure.severity(allure.severity_level.MINOR)      # Funcionalidad menor
+@allure.severity(allure.severity_level.TRIVIAL)    # Cosmético
+def test_example():
+    pass
+```
+
+### Tags y Labels
+
+```python
+@allure.tag("smoke", "authentication", "api")
+@allure.label("owner", "julian.serna")
+@allure.label("layer", "ui")
+def test_example():
+    pass
+```
+
+### Links
+
+```python
+@allure.link("https://jira.company.com/browse/PROJ-123", name="JIRA Ticket")
+@allure.issue("PROJ-456", "Bug Report")
+@allure.testcase("TC-789", "Test Case")
+def test_example():
+    pass
+```
+
+## 🎬 Steps (Pasos)
+
+Los steps hacen que el reporte sea más legible:
+
+```python
+import allure
+
+def test_login():
+    with allure.step("Navigate to login page"):
+        page.goto("/login")
+
+    with allure.step("Enter credentials"):
+        page.fill("#username", "user@example.com")
+        page.fill("#password", "password123")
+
+    with allure.step("Click login button"):
+        page.click("#login-btn")
+
+    with allure.step("Verify successful login"):
+        assert page.locator(".welcome-message").is_visible()
+```
+
+## 📎 Attachments (Adjuntos)
+
+Agrega evidencia a tus tests:
+
+```python
+import allure
+
+# Screenshot
+allure.attach(
+    page.screenshot(),
+    name="screenshot",
+    attachment_type=allure.attachment_type.PNG
+)
+
+# HTML
+allure.attach(
+    page.content(),
+    name="page_html",
+    attachment_type=allure.attachment_type.HTML
+)
+
+# JSON
+allure.attach(
+    json.dumps(data),
+    name="response_data",
+    attachment_type=allure.attachment_type.JSON
+)
+
+# Text
+allure.attach(
+    "Some important information",
+    name="notes",
+    attachment_type=allure.attachment_type.TEXT
+)
+```
+
+## 🔄 Fixtures con Allure
+
+```python
+import allure
+import pytest
+
+@pytest.fixture
+def setup_user():
+    with allure.step("Create test user"):
+        user = create_user()
+
+    yield user
+
+    with allure.step("Cleanup test user"):
+        delete_user(user)
+```
+
+## 📊 Parametrización
+
+```python
+import allure
+import pytest
+
+@pytest.mark.parametrize(
+    "username,password,expected_error",
+    [
+        pytest.param(
+            "invalid@test.com",
+            "wrong",
+            "Invalid credentials",
+            id="invalid_credentials",
+            marks=allure.label("test_type", "negative")
+        ),
+    ]
+)
+def test_login_failures(username, password, expected_error):
+    with allure.step(f"Try login with {username}"):
+        # Test code here
+        pass
+```
+
+## 🎨 Mejores Prácticas
+
+### ✅ DO's
+
+1. **Usa steps descriptivos**
+   ```python
+   with allure.step("User fills checkout form with valid data"):
+       # código
+   ```
+
+2. **Adjunta evidencia relevante**
+   ```python
+   allure.attach(screenshot, name="error_state", attachment_type=PNG)
+   ```
+
+3. **Organiza jerárquicamente**
+   - Epic → Feature → Story → Test
+
+4. **Agrega contexto**
+   ```python
+   allure.attach(f"User ID: {user_id}", name="Test Data", attachment_type=TEXT)
+   ```
+
+5. **Usa severidad apropiada**
+   - BLOCKER para funcionalidad crítica
+   - CRITICAL para features importantes
+   - NORMAL para funcionalidad estándar
+
+### ❌ DON'Ts
+
+1. **No uses steps para cada línea**
+   ```python
+   # ❌ Demasiado granular
+   with allure.step("Click button"):
+       page.click("#btn")
+
+   # ✅ Mejor
+   with allure.step("Complete checkout process"):
+       page.click("#checkout")
+       page.fill("#card", "1234")
+       page.click("#submit")
+   ```
+
+2. **No adjuntes archivos innecesarios**
+   - Solo adjunta en caso de fallo o información crítica
+
+3. **No uses titles genéricos**
+   ```python
+   # ❌ Malo
+   @allure.title("Test 1")
+
+   # ✅ Bueno
+   @allure.title("User can successfully complete checkout with valid credit card")
+   ```
+
+## 📈 Características del Reporte
+
+El reporte de Allure incluye:
+
+1. **Overview**: Vista general con estadísticas
+2. **Categories**: Clasificación de fallos
+3. **Suites**: Tests organizados por suites
+4. **Graphs**: Gráficos de tendencias y distribución
+5. **Timeline**: Línea de tiempo de ejecución
+6. **Behaviors**: Organización por BDD (Epic/Feature/Story)
+7. **Packages**: Organización por estructura de carpetas
+
+## 🔧 Configuración Avanzada
+
+### Categorías de Fallos
+
+Crea `categories.json` en `allure-results/`:
+
+```json
+[
+  {
+    "name": "Product defects",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*AssertionError.*"
+  },
+  {
+    "name": "Test defects",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*RuntimeError.*"
+  },
+  {
+    "name": "Ignored tests",
+    "matchedStatuses": ["skipped"]
+  }
+]
+```
+
+### Environment Info
+
+Ya está configurado en `conftest.py`, pero puedes personalizarlo:
+
+```python
+@pytest.fixture(scope="session", autouse=True)
+def configure_allure_environment():
+    allure_results_dir = Path("allure-results")
+    environment_properties = {
+        "Browser": "Chrome",
+        "Environment": "QA",
+        "Build": "1.0.0",
+        # Agrega más propiedades
+    }
+    # Escribir al archivo
+```
+
+## 🚀 CI/CD Integration
+
+### GitHub Actions
+
+Ya incluido en `.github/workflows/ci.yml`:
+
+```yaml
+- name: Run tests
+  run: poetry run pytest --alluredir=allure-results
+
+- name: Get Allure history
+  uses: actions/checkout@v2
+  if: always()
+  continue-on-error: true
+  with:
+    ref: gh-pages
+    path: gh-pages
+
+- name: Allure Report action
+  uses: simple-elf/allure-report-action@master
+  if: always()
+  with:
+    allure_results: allure-results
+    allure_history: allure-history
+    keep_reports: 20
+```
+
+## 📚 Recursos Adicionales
+
+- [Documentación Oficial de Allure](https://docs.qameta.io/allure/)
+- [Allure Python Integrations](https://docs.qameta.io/allure/#_python)
+- [Allure Report Examples](https://demo.qameta.io/allure/)
+
+## 🔍 Ejemplos en el Proyecto
+
+Revisa estos archivos para ver ejemplos completos:
+
+- `tests/test_login.py` - Decoradores básicos
+- `tests/test_checkout_smoke.py` - Steps y attachments
+- `tests/additional_test_cases.py` - Ejemplos avanzados
+- `tests/conftest.py` - Configuración de Allure
+
+## 💡 Tips Profesionales
+
+1. **Usa dynamic titles** para tests parametrizados:
+   ```python
+   @allure.title("Login with {username} should return {expected_status}")
+   def test_login(username, expected_status):
+       pass
+   ```
+
+2. **Documenta tu API** con descriptions:
+   ```python
+   @allure.description("""
+   This test verifies:
+   - User authentication
+   - Session creation
+   - Token generation
+   """)
+   ```
+
+3. **Agrupa tests relacionados** con tags:
+   ```python
+   @allure.tag("smoke", "regression", "auth")
+   ```
+
+---
+
+**🎉 ¡Listo! Ahora tienes Allure completamente configurado.**
+
+Para generar tu primer reporte:
+```bash
+make allure-serve
+```
+
 **Happy Testing! 🎭✨**
