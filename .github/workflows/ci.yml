@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   pull_request:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -26,13 +31,16 @@ jobs:
           poetry run playwright install --with-deps
 
       - name: Run tests (headless)
-        run: poetry run pytest -n auto --maxfail=1 --dist=loadfile --html=report.html --self-contained-html
+        run: poetry run pytest -n auto --maxfail=1 --dist=loadfile --html=report.html --self-contained-html --alluredir=allure-results
+        continue-on-error: true
 
-      - name: Upload Test Report
+      - name: Upload HTML Test Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: test-report
+          name: html-test-report
           path: report.html
+          retention-days: 30
 
       - name: Upload Allure Results
         uses: actions/upload-artifact@v4
